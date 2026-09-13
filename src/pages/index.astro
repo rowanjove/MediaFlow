@@ -1,0 +1,42 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import ParseApp from '../components/ParseApp.astro';
+import PlatformList from '../components/PlatformList.astro';
+import AdminModal from '../components/AdminModal.astro';
+---
+
+<Layout>
+  <Header />
+
+  <main class="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 py-8 sm:py-16 flex flex-col items-center justify-center">
+    <div class="text-center max-w-xl mx-auto mb-8 sm:mb-12">
+      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-border bg-accent/60 text-accent-foreground text-xs font-mono mb-4">
+        <span data-i18n="hero.badge_mode">Worker Native</span>
+        <span class="w-1 h-1 rounded-full bg-primary"></span>
+        <span data-i18n="hero.badge_cdn">直连原站 CDN</span>
+      </div>
+      <h1 class="text-3xl sm:text-5xl font-bold tracking-tight text-foreground" data-i18n="hero.title">
+        多平台媒体解析
+      </h1>
+      <p class="mt-3 text-sm sm:text-base text-muted-foreground leading-relaxed" data-i18n="hero.desc">
+        粘贴公开分享链接或口令全文，识别平台并给出去水印直链。文件由浏览器直连原站下载。
+      </p>
+    </div>
+
+    <ParseApp />
+    <PlatformList />
+  </main>
+
+  <footer class="border-t border-border py-6 text-center text-xs text-muted-foreground font-mono">
+    <div class="max-w-5xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
+      <div>MediaFlow © 2026</div>
+      <div class="flex items-center gap-3">
+        <a href="/faq" class="hover:text-primary" data-i18n="footer.faq">FAQ</a>
+        <span data-i18n="footer.direct">Direct CDN</span>
+      </div>
+    </div>
+  </footer>
+
+  <AdminModal />
+</Layout>

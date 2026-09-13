@@ -1,0 +1,19 @@
+{
+  "item_list": [
+    {
+      "aweme_id": "7123456789012345678",
+      "desc": "测试航拍视频",
+      "create_time": 1700000000,
+      "duration": 15000,
+      "author": {
+        "nickname": "测试作者",
+        "unique_id": "tester",
+        "avatar_thumb": { "url_list": ["//p3.douyinpic.com/avatar.jpg"] }
+      },
+      "video": {
+        "cover": { "url_list": ["//p3.douyinpic.com/cover.jpg"] },
+        "play_addr": { "url_list": ["https://aweme.snssdk.com/aweme/v1/playwm/test"] }
+      }
+    }
+  ]
+}

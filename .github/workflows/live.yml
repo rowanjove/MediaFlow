@@ -1,0 +1,30 @@
+name: Nightly live parse
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 18 * * *'
+
+jobs:
+  live:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Live parse
+        env:
+          RUN_LIVE_PARSE: '1'
+          LIVE_DOUYIN_URL: ${{ secrets.LIVE_DOUYIN_URL }}
+          LIVE_XHS_URL: ${{ secrets.LIVE_XHS_URL }}
+          LIVE_BILIBILI_URL: ${{ secrets.LIVE_BILIBILI_URL }}
+          LIVE_KUAISHOU_URL: ${{ secrets.LIVE_KUAISHOU_URL }}
+          LIVE_TWITTER_URL: ${{ secrets.LIVE_TWITTER_URL }}
+          LIVE_TIKTOK_URL: ${{ secrets.LIVE_TIKTOK_URL }}
+          LIVE_INSTAGRAM_URL: ${{ secrets.LIVE_INSTAGRAM_URL }}
+          COBALT_PRIMARY_URL: ${{ secrets.COBALT_PRIMARY_URL }}
+        run: npm run test:live

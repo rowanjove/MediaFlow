@@ -1,0 +1,10 @@
+---
+import PlatformLanding from '../components/PlatformLanding.astro';
+---
+<PlatformLanding
+  platform="bilibili"
+  name="哔哩哔哩"
+  description="解析公开 B 站视频，尽量分离视频轨与音频轨。"
+  types={['视频', '音频轨']}
+  notes="高清 DASH 流在无 Cookie 时可能失败。配置 BILIBILI_COOKIE 可提高成功率。不转码、不合并音视频。"
+/>

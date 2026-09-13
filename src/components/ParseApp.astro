@@ -1,0 +1,268 @@
+---
+import UrlInput from './UrlInput.astro';
+import ResultCard from './ResultCard.astro';
+---
+
+<UrlInput />
+<ResultCard />
+
+<script>
+  const inputEl = document.getElementById('url-input') as HTMLInputElement;
+  const pasteBtn = document.getElementById('paste-btn');
+  const parseBtn = document.getElementById('parse-btn') as HTMLButtonElement;
+  const btnText = document.getElementById('btn-text');
+  const btnSpinner = document.getElementById('btn-spinner');
+  const errorBox = document.getElementById('error-box');
+  const errorMessage = document.getElementById('error-message');
+
+  const resultContainer = document.getElementById('result-container');
+  const resAuthorAvatar = document.getElementById('res-author-avatar') as HTMLImageElement;
+  const resAuthorName = document.getElementById('res-author-name');
+  const resPlatformTag = document.getElementById('res-platform-tag');
+  const resCreatedAt = document.getElementById('res-created-at');
+  const resTitle = document.getElementById('res-title');
+  const openSourceBtn = document.getElementById('open-source-btn');
+  const copyJsonBtn = document.getElementById('copy-json-btn');
+
+  const videoSection = document.getElementById('video-section');
+  const resVideoPlayer = document.getElementById('res-video-player') as HTMLVideoElement;
+  const videoActions = document.getElementById('video-actions');
+
+  const imagesSection = document.getElementById('images-section');
+  const imagesCount = document.getElementById('images-count');
+  const imagesGrid = document.getElementById('images-grid');
+  const downloadAllImagesBtn = document.getElementById('download-all-images-btn');
+
+  const audioSection = document.getElementById('audio-section');
+  const audioDownloadLink = document.getElementById('audio-download-link') as HTMLAnchorElement;
+
+  let currentResult: any = null;
+
+  pasteBtn?.addEventListener('click', async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      if (text) {
+        inputEl.value = text.trim();
+        inputEl.focus();
+        doParse();
+      }
+    } catch {
+      inputEl.focus();
+    }
+  });
+
+  inputEl?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') doParse();
+  });
+
+  parseBtn?.addEventListener('click', () => doParse());
+
+  async function doParse() {
+    const raw = inputEl.value.trim();
+    if (!raw) {
+      showError('请输入需要解析的链接或分享文本');
+      return;
+    }
+
+    hideError();
+    setLoading(true);
+    resultContainer?.classList.add('hidden');
+
+    try {
+      const response = await fetch('/api/v1/parse', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: raw }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        showError(data.error?.message || '解析请求受阻，请稍后重试');
+        return;
+      }
+
+      currentResult = data;
+      renderResult(data);
+    } catch (err: any) {
+      showError(err?.message || '无法连通解析服务，请检查网络连接');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function setLoading(loading: boolean) {
+    if (parseBtn) parseBtn.disabled = loading;
+    if (loading) {
+      btnText?.classList.add('hidden');
+      btnSpinner?.classList.remove('hidden');
+    } else {
+      btnText?.classList.remove('hidden');
+      btnSpinner?.classList.add('hidden');
+    }
+  }
+
+  function showError(msg: string) {
+    if (errorBox && errorMessage) {
+      errorMessage.textContent = msg;
+      errorBox.classList.remove('hidden');
+    }
+  }
+
+  function hideError() {
+    errorBox?.classList.add('hidden');
+  }
+
+  function publicJson(data: any) {
+    const copy = JSON.parse(JSON.stringify(data));
+    if (copy.provider) {
+      delete copy.provider.id;
+      delete copy.provider.fallbackChain;
+    }
+    return copy;
+  }
+
+  function renderResult(data: any) {
+    if (!resultContainer) return;
+
+    if (resAuthorAvatar) {
+      resAuthorAvatar.src =
+        data.author?.avatar ||
+        'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%2352525b"><circle cx="12" cy="12" r="10"/></svg>';
+    }
+    if (resAuthorName) resAuthorName.textContent = data.author?.name || '公开内容作者';
+    if (resPlatformTag) resPlatformTag.textContent = data.platform;
+    if (resCreatedAt) {
+      resCreatedAt.textContent = data.content?.createdAt
+        ? new Date(data.content.createdAt).toLocaleDateString()
+        : '近期发布';
+    }
+    if (resTitle) {
+      resTitle.textContent = data.content?.title || data.content?.description || '无标题';
+    }
+
+    if (openSourceBtn) {
+      openSourceBtn.onclick = () => {
+        window.open(data.source?.canonicalUrl || data.source?.url, '_blank');
+      };
+    }
+
+    if (copyJsonBtn) {
+      copyJsonBtn.onclick = () => {
+        navigator.clipboard.writeText(JSON.stringify(publicJson(data), null, 2));
+        const orig = copyJsonBtn.textContent;
+        copyJsonBtn.textContent = '已复制!';
+        setTimeout(() => {
+          copyJsonBtn.textContent = orig;
+        }, 1500);
+      };
+    }
+
+    const videos = data.media?.filter((m: any) => m.type === 'video') || [];
+    const images = data.media?.filter((m: any) => m.type === 'image') || [];
+    const audios = data.media?.filter((m: any) => m.type === 'audio') || [];
+
+    const isDash = videos.some((v: any) => v.filename?.endsWith('.m4s') || v.quality?.includes('DASH'));
+
+    if (videos.length > 0 && videoSection && resVideoPlayer && videoActions) {
+      videoSection.classList.remove('hidden');
+      let dashNotice = document.getElementById('dash-notice');
+
+      if (isDash) {
+        resVideoPlayer.classList.add('hidden');
+        if (!dashNotice) {
+          dashNotice = document.createElement('div');
+          dashNotice.id = 'dash-notice';
+          dashNotice.className = 'p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg text-xs text-amber-300 mb-3 text-center';
+          resVideoPlayer.parentElement?.insertBefore(dashNotice, resVideoPlayer);
+        }
+        dashNotice.textContent = '提示：检测到音视频分离流 (DASH 格式)，请分别下载下方的视频轨与音频轨后合成播放。';
+        dashNotice.classList.remove('hidden');
+        resVideoPlayer.src = '';
+      } else {
+        resVideoPlayer.classList.remove('hidden');
+        if (dashNotice) dashNotice.classList.add('hidden');
+        resVideoPlayer.src = videos[0].url;
+      }
+
+      videoActions.innerHTML = '';
+      videos.forEach((v: any, i: number) => {
+        const btn = document.createElement('a');
+        btn.href = v.url;
+        btn.target = '_blank';
+        btn.rel = 'noopener noreferrer';
+        btn.download = v.filename || `video_${i + 1}.mp4`;
+        btn.className = 'btn-primary';
+        btn.textContent = `下载 ${v.quality || '原画视频'}`;
+        videoActions.appendChild(btn);
+
+        const copyBtn = document.createElement('button');
+        copyBtn.className = 'btn-secondary font-mono';
+        copyBtn.textContent = '复制直链';
+        copyBtn.onclick = () => {
+          navigator.clipboard.writeText(v.url);
+          copyBtn.textContent = '已复制!';
+          setTimeout(() => {
+            copyBtn.textContent = '复制直链';
+          }, 1500);
+        };
+        videoActions.appendChild(copyBtn);
+      });
+    } else {
+      videoSection?.classList.add('hidden');
+      if (resVideoPlayer) resVideoPlayer.src = '';
+    }
+
+    if (images.length > 0 && imagesSection && imagesCount && imagesGrid) {
+      imagesSection.classList.remove('hidden');
+      imagesCount.textContent = String(images.length);
+      imagesGrid.innerHTML = '';
+
+      images.forEach((img: any, idx: number) => {
+        const card = document.createElement('div');
+        card.className =
+          'group relative rounded-xl overflow-hidden border border-border bg-muted aspect-square';
+        const safePreview = img.previewUrl || img.url;
+        card.innerHTML = `
+          <img src="${safePreview}" alt="" referrerpolicy="no-referrer" loading="lazy" class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
+          <div class="absolute inset-0 bg-slate-900/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+            <a href="${img.url}" target="_blank" rel="noopener noreferrer" class="btn-secondary text-xs">打开</a>
+            <a href="${img.url}" download="${img.filename || `image_${idx + 1}.jpg`}" target="_blank" rel="noopener noreferrer" class="btn-primary text-xs">下载</a>
+          </div>
+        `;
+        imagesGrid.appendChild(card);
+      });
+
+      if (downloadAllImagesBtn) {
+        downloadAllImagesBtn.onclick = () => {
+          images.forEach((img: any, idx: number) => {
+            setTimeout(() => {
+              const a = document.createElement('a');
+              a.href = img.url;
+              a.download = img.filename || `image_${idx + 1}.jpg`;
+              a.target = '_blank';
+              a.rel = 'noopener noreferrer';
+              document.body.appendChild(a);
+              a.click();
+              document.body.removeChild(a);
+            }, idx * 300);
+          });
+        };
+      }
+    } else {
+      imagesSection?.classList.add('hidden');
+    }
+
+    if (audios.length > 0 && audioSection && audioDownloadLink) {
+      audioSection.classList.remove('hidden');
+      audioDownloadLink.href = audios[0].url;
+      audioDownloadLink.download = audios[0].filename || 'audio.mp3';
+    } else {
+      audioSection?.classList.add('hidden');
+    }
+
+    resultContainer.classList.remove('hidden');
+    resultContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    void currentResult;
+  }
+</script>

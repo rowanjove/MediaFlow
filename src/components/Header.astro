@@ -1,0 +1,100 @@
+---
+---
+
+<header class="w-full border-b border-border bg-background/80 backdrop-blur-md sticky top-0 z-40">
+  <div class="max-w-5xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
+    <div id="brand-logo" class="flex items-center gap-2 cursor-pointer select-none group">
+      <div class="w-6 h-6 rounded-md bg-primary text-primary-foreground flex items-center justify-center font-bold text-xs tracking-tighter transition-transform duration-200 group-hover:scale-105 group-active:scale-95">
+        M
+      </div>
+      <span class="font-semibold text-sm tracking-tight text-foreground">
+        MediaFlow
+      </span>
+      <span class="chip ml-1">v1.0</span>
+    </div>
+
+    <div class="flex items-center gap-2 sm:gap-3">
+      <div class="flex items-center gap-1.5 text-xs text-muted-foreground font-mono">
+        <span class="relative flex h-2 w-2">
+          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-60"></span>
+          <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+        </span>
+        <span class="hidden sm:inline" data-i18n="brand.status">Edge Ready</span>
+      </div>
+
+      <button
+        id="lang-toggle"
+        class="px-2 py-1 text-xs font-mono font-medium rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors border border-border"
+        title="Switch Language / 切换语言"
+        aria-label="Toggle Language"
+      >
+        EN
+      </button>
+
+      <button
+        id="theme-toggle"
+        class="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+        title="切换色彩主题"
+        data-i18n-title="theme.toggle"
+        aria-label="Toggle Theme"
+      >
+        <svg id="sun-icon" class="w-4 h-4 hidden dark:block" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/>
+        </svg>
+        <svg id="moon-icon" class="w-4 h-4 block dark:hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<script>
+  import { getInitialLang, applyLanguage } from '../scripts/i18n';
+
+  // Initialize language
+  let currentLang = getInitialLang();
+  applyLanguage(currentLang);
+
+  const langToggle = document.getElementById('lang-toggle');
+  langToggle?.addEventListener('click', () => {
+    currentLang = currentLang === 'zh' ? 'en' : 'zh';
+    applyLanguage(currentLang);
+  });
+
+  const themeToggle = document.getElementById('theme-toggle');
+  const themeColor = document.querySelector('meta[name="theme-color"]');
+
+  function applyTheme(dark: boolean) {
+    document.documentElement.classList.toggle('dark', dark);
+    localStorage.setItem('theme', dark ? 'dark' : 'light');
+    themeColor?.setAttribute('content', dark ? '#0b1220' : '#ffffff');
+  }
+
+  themeToggle?.addEventListener('click', () => {
+    applyTheme(!document.documentElement.classList.contains('dark'));
+  });
+
+  let clickCount = 0;
+  let clickTimer: number | null = null;
+  const brandLogo = document.getElementById('brand-logo');
+
+  brandLogo?.addEventListener('click', () => {
+    clickCount++;
+    if (clickTimer) clearTimeout(clickTimer);
+    clickTimer = window.setTimeout(() => {
+      clickCount = 0;
+    }, 1500);
+
+    if (clickCount >= 5) {
+      clickCount = 0;
+      const modal = document.getElementById('admin-modal');
+      if (modal) {
+        modal.classList.remove('hidden');
+        (document.getElementById('admin-secret-input') as HTMLInputElement)?.focus();
+      } else {
+        window.location.href = '/console';
+      }
+    }
+  });
+</script>

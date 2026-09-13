@@ -1,0 +1,165 @@
+---
+---
+
+<div class="w-full max-w-4xl mx-auto mt-12 sm:mt-16 px-0 sm:px-4">
+  <div class="text-center mb-4">
+    <h3 class="text-xs font-mono uppercase tracking-widest text-muted-foreground" data-i18n="platform.heading">Supported Platforms</h3>
+  </div>
+
+  <div
+    id="platform-grid"
+    class="platform-grid is-collapsed"
+    aria-label="支持的平台"
+  ></div>
+
+  <div id="platform-more-wrap" class="hidden justify-center mt-3">
+    <button
+      type="button"
+      id="platform-more-btn"
+      class="text-xs text-muted-foreground hover:text-primary px-3 py-1.5 rounded-full border border-border hover:border-ring transition-colors"
+      data-i18n="platform.more"
+    >
+      查看更多
+    </button>
+  </div>
+</div>
+
+<style>
+  .platform-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(7.25rem, 1fr));
+    gap: 0.25rem 0.35rem;
+  }
+  .platform-grid.is-collapsed {
+    max-height: 2.25rem;
+    overflow: hidden;
+  }
+  @media (min-width: 640px) {
+    .platform-grid {
+      grid-template-columns: repeat(auto-fill, minmax(8rem, 1fr));
+    }
+  }
+</style>
+
+<script>
+  const hrefMap: Record<string, string> = {
+    douyin: '/douyin',
+    xiaohongshu: '/xiaohongshu',
+    bilibili: '/bilibili',
+    kuaishou: '/kuaishou',
+    weibo: '/weibo',
+    tiktok: '/tiktok',
+    instagram: '/instagram',
+    twitter: '/twitter',
+    youtube: '/youtube',
+  };
+
+  const defaultIcon =
+    '<svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>';
+
+  const icons: Record<string, string> = {
+    douyin:
+      '<svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>',
+    xiaohongshu:
+      '<svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>',
+    bilibili:
+      '<svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="15" rx="2"/><path d="m17 2-5 5-5-5"/></svg>',
+    kuaishou:
+      '<svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m22 8-6 4 6 4V8Z"/><rect x="2" y="6" width="14" height="12" rx="2"/></svg>',
+    weibo:
+      '<svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" x2="15.42" y1="13.51" y2="17.49"/><line x1="15.41" x2="8.59" y1="6.51" y2="10.49"/></svg>',
+    tiktok:
+      '<svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5"/></svg>',
+    instagram:
+      '<svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="20" x="2" y="2" rx="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/></svg>',
+    twitter:
+      '<svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4l11.7 16h4.3L8.3 4H4z"/><path d="M4 20 20 4"/></svg>',
+    youtube:
+      '<svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m22 8-6 4 6 4V8Z"/><rect x="2" y="6" width="14" height="12" rx="2"/></svg>',
+  };
+
+  function lightClass(status: string): { cls: string; label: string } {
+    const isEn = document.documentElement.lang === 'en';
+    if (status === 'stable') return { cls: 'bg-emerald-500', label: isEn ? 'Stable' : '稳定' };
+    if (status === 'unavailable') return { cls: 'bg-red-500', label: isEn ? 'Unavailable' : '不可用' };
+    return { cls: 'bg-amber-400', label: isEn ? 'Beta' : '试验' };
+  }
+
+  const grid = document.getElementById('platform-grid');
+  const moreWrap = document.getElementById('platform-more-wrap');
+  const moreBtn = document.getElementById('platform-more-btn');
+  let expanded = false;
+  let cachedPlatforms: any[] = [];
+
+  function syncMoreButton() {
+    if (!grid || !moreWrap || !moreBtn) return;
+    const isEn = document.documentElement.lang === 'en';
+    if (expanded) {
+      moreWrap.classList.remove('hidden');
+      moreWrap.classList.add('flex');
+      moreBtn.textContent = isEn ? 'Collapse' : '收起';
+      return;
+    }
+    const overflowing = grid.scrollHeight > grid.clientHeight + 1;
+    if (overflowing) {
+      moreWrap.classList.remove('hidden');
+      moreWrap.classList.add('flex');
+      moreBtn.textContent = isEn ? 'Show More' : '查看更多';
+    } else {
+      moreWrap.classList.add('hidden');
+      moreWrap.classList.remove('flex');
+    }
+  }
+
+  function renderPlatforms() {
+    if (!grid) return;
+    grid.innerHTML = '';
+    cachedPlatforms.forEach((p: any) => {
+      const light = lightClass(p.status);
+      const a = document.createElement('a');
+      a.href = hrefMap[p.id] || '/';
+      a.title = `${p.name} · ${light.label}`;
+      a.className =
+        'h-9 px-2 rounded-lg flex items-center gap-1.5 text-foreground hover:bg-muted transition-colors min-w-0';
+      a.innerHTML = `
+        <span class="w-1.5 h-1.5 rounded-full shrink-0 ${light.cls}" aria-label="${light.label}"></span>
+        ${icons[p.id] || defaultIcon}
+        <span class="text-xs font-medium truncate">${p.name}</span>
+      `;
+      grid.appendChild(a);
+    });
+    requestAnimationFrame(syncMoreButton);
+  }
+
+  async function loadPlatforms() {
+    if (!grid) return;
+    try {
+      const res = await fetch('/api/v1/platforms');
+      const data = await res.json();
+      cachedPlatforms = data.platforms || [];
+      renderPlatforms();
+    } catch {
+      const isEn = document.documentElement.lang === 'en';
+      grid.innerHTML = `<div class="col-span-full text-center text-xs text-muted-foreground py-2">${isEn ? 'Platforms unavailable' : '平台列表暂不可用'}</div>`;
+      moreWrap?.classList.add('hidden');
+    }
+  }
+
+  window.addEventListener('app:language-changed', () => {
+    if (cachedPlatforms.length > 0) {
+      renderPlatforms();
+    }
+  });
+
+  moreBtn?.addEventListener('click', () => {
+    expanded = !expanded;
+    grid?.classList.toggle('is-collapsed', !expanded);
+    syncMoreButton();
+  });
+
+  window.addEventListener('resize', () => {
+    if (!expanded) syncMoreButton();
+  });
+
+  loadPlatforms();
+</script>

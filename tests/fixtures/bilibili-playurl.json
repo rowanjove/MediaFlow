@@ -1,0 +1,13 @@
+{
+  "code": 0,
+  "data": {
+    "dash": {
+      "video": [
+        { "id": 80, "baseUrl": "https://upos-sz-mirror.bilivideo.com/video.m4s", "width": 1920, "height": 1080 }
+      ],
+      "audio": [
+        { "id": 30280, "baseUrl": "https://upos-sz-mirror.bilivideo.com/audio.m4a" }
+      ]
+    }
+  }
+}

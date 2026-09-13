@@ -1,0 +1,113 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: 0 0% 100%;
+  --foreground: 222 47% 11%;
+  --card: 0 0% 100%;
+  --card-foreground: 222 47% 11%;
+  --border: 214 32% 91%;
+  --primary: 221 83% 53%;
+  --primary-hover: 221 83% 46%;
+  --primary-foreground: 0 0% 100%;
+  --muted: 210 40% 96.5%;
+  --muted-foreground: 215 16% 40%;
+  --accent: 214 95% 93%;
+  --accent-foreground: 221 83% 40%;
+  --ring: 221 83% 53%;
+  --danger: 0 72% 51%;
+  --grid: 214 32% 91%;
+}
+
+.dark {
+  --background: 222 47% 6%;
+  --foreground: 210 40% 98%;
+  --card: 222 47% 8%;
+  --card-foreground: 210 40% 98%;
+  --border: 217 33% 18%;
+  --primary: 217 91% 60%;
+  --primary-hover: 217 91% 54%;
+  --primary-foreground: 222 47% 8%;
+  --muted: 217 33% 14%;
+  --muted-foreground: 215 20% 65%;
+  --accent: 217 33% 16%;
+  --accent-foreground: 213 97% 78%;
+  --ring: 217 91% 60%;
+  --danger: 0 84% 60%;
+  --grid: 217 33% 16%;
+}
+
+* {
+  border-color: hsl(var(--border));
+}
+
+body {
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-feature-settings: "ss01", "cv11";
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: hsl(var(--accent));
+  color: hsl(var(--accent-foreground));
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--border));
+  border-radius: 9999px;
+}
+
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-1.5 rounded-lg px-5 py-2 text-xs font-semibold whitespace-nowrap transition-all active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none;
+    background: hsl(var(--primary));
+    color: hsl(var(--primary-foreground));
+    min-width: 6.5rem;
+  }
+  .btn-primary:hover {
+    background: hsl(var(--primary-hover));
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors border;
+    background: hsl(var(--card));
+    color: hsl(var(--muted-foreground));
+    border-color: hsl(var(--border));
+  }
+  .btn-secondary:hover {
+    color: hsl(var(--foreground));
+    background: hsl(var(--muted));
+  }
+
+  .surface {
+    background: hsl(var(--card));
+    border: 1px solid hsl(var(--border));
+  }
+
+  .chip {
+    @apply text-[10px] font-mono px-1.5 py-0.5 rounded border;
+    background: hsl(var(--muted));
+    color: hsl(var(--muted-foreground));
+    border-color: hsl(var(--border));
+  }
+
+  .field {
+    @apply w-full rounded-lg px-3 py-2 text-sm font-mono outline-none transition-colors border;
+    background: hsl(var(--muted));
+    color: hsl(var(--foreground));
+    border-color: hsl(var(--border));
+  }
+  .field:focus {
+    border-color: hsl(var(--ring));
+    box-shadow: 0 0 0 3px hsl(var(--ring) / 0.18);
+  }
+}

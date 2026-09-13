@@ -1,0 +1,26 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import AdminModal from '../components/AdminModal.astro';
+---
+
+<Layout title="FAQ · MediaFlow" description="多平台媒体解析站常见问题">
+  <Header />
+  <main class="flex-1 max-w-2xl w-full mx-auto px-4 sm:px-6 py-12 space-y-8">
+    <h1 class="text-2xl font-bold text-foreground">常见问题</h1>
+    <section class="space-y-2">
+      <h2 class="text-sm font-semibold text-foreground">会下载私密内容吗？</h2>
+      <p class="text-sm text-muted-foreground leading-relaxed">不会。只处理公开分享链接，不绕过登录墙、不破解 DRM。</p>
+    </section>
+    <section class="space-y-2">
+      <h2 class="text-sm font-semibold text-foreground">文件经过你们的服务器吗？</h2>
+      <p class="text-sm text-muted-foreground leading-relaxed">默认不经过。解析只返回直链，浏览器直连原站 CDN。</p>
+    </section>
+    <section class="space-y-2">
+      <h2 class="text-sm font-semibold text-foreground">为什么有的链接失败？</h2>
+      <p class="text-sm text-muted-foreground leading-relaxed">平台改版、风控或需要 Cookie。失败会返回明确错误码，而不是空白页。</p>
+    </section>
+    <a href="/" class="inline-block text-xs font-mono text-muted-foreground hover:text-primary">← 返回首页</a>
+  </main>
+  <AdminModal />
+</Layout>

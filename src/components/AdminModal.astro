@@ -1,0 +1,68 @@
+---
+---
+
+<div id="admin-modal" class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm hidden flex items-center justify-center p-4">
+  <div class="w-full max-w-sm surface rounded-xl p-6 shadow-float relative">
+    <button id="close-admin-modal" class="absolute top-4 right-4 text-muted-foreground hover:text-foreground text-sm">
+      ✕
+    </button>
+    <div class="mb-4">
+      <div class="text-xs font-mono uppercase tracking-wider text-muted-foreground mb-1">System Console</div>
+      <h3 class="text-base font-semibold text-foreground">进入管理终端</h3>
+      <p class="text-xs text-muted-foreground mt-1">此区域为隐藏节点监控与配置，请输入管理密钥。</p>
+    </div>
+
+    <form id="admin-auth-form" class="space-y-4">
+      <input
+        type="password"
+        id="admin-secret-input"
+        placeholder="输入 ADMIN_SECRET 密钥"
+        class="field"
+        required
+      />
+      <div id="admin-error-msg" class="text-xs text-danger hidden"></div>
+      <button type="submit" class="btn-primary w-full py-2.5">
+        验证进入
+      </button>
+    </form>
+  </div>
+</div>
+
+<script>
+  const modal = document.getElementById('admin-modal');
+  const closeBtn = document.getElementById('close-admin-modal');
+  const form = document.getElementById('admin-auth-form');
+  const input = document.getElementById('admin-secret-input') as HTMLInputElement;
+  const errorMsg = document.getElementById('admin-error-msg');
+
+  closeBtn?.addEventListener('click', () => {
+    modal?.classList.add('hidden');
+    if (errorMsg) errorMsg.classList.add('hidden');
+  });
+
+  form?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const key = input.value.trim();
+    if (!key) return;
+
+    try {
+      const res = await fetch('/api/v1/admin/stats', {
+        headers: { Authorization: `Bearer ${key}`, 'X-Admin-Key': key },
+      });
+      if (res.ok) {
+        sessionStorage.setItem('admin_token', key);
+        window.location.href = '/console';
+      } else {
+        if (errorMsg) {
+          errorMsg.textContent = '密钥验证失败，请确认后重试';
+          errorMsg.classList.remove('hidden');
+        }
+      }
+    } catch {
+      if (errorMsg) {
+        errorMsg.textContent = '网络连接异常，无法连通管理服务';
+        errorMsg.classList.remove('hidden');
+      }
+    }
+  });
+</script>

@@ -1,0 +1,17 @@
+{
+  "name": "MediaFlow",
+  "short_name": "MediaFlow",
+  "description": "多平台公开媒体解析与直链下载",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2563eb",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

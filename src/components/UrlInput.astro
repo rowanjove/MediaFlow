@@ -1,0 +1,58 @@
+---
+---
+
+<div class="w-full max-w-2xl mx-auto">
+  <div class="surface rounded-xl p-2 sm:p-1.5 transition-all duration-200 focus-within:border-ring focus-within:ring-2 focus-within:ring-ring/20 shadow-subtle">
+    <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+      <div class="flex items-center flex-1 min-w-0">
+        <div class="pl-2.5 pr-2 text-muted-foreground shrink-0">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+          </svg>
+        </div>
+        <input
+          type="text"
+          id="url-input"
+          placeholder="粘贴分享口令或链接，支持抖音/小红书等全文"
+          data-i18n-placeholder="input.placeholder"
+          class="w-full min-w-0 bg-transparent text-sm text-foreground placeholder-muted-foreground/70 focus:outline-none px-1 py-2"
+          autocomplete="off"
+          spellcheck="false"
+        />
+      </div>
+
+      <div class="flex items-center gap-2 shrink-0 sm:pr-0.5">
+        <button
+          type="button"
+          id="paste-btn"
+          class="btn-secondary whitespace-nowrap min-w-[4.5rem] px-4 py-2 flex-1 sm:flex-none"
+          title="从系统剪贴板粘贴"
+          data-i18n="input.paste"
+        >
+          粘贴
+        </button>
+        <button type="button" id="parse-btn" class="btn-primary flex-1 sm:flex-none">
+          <span id="btn-text" data-i18n="input.parse">立即解析</span>
+          <svg id="btn-spinner" class="w-3.5 h-3.5 animate-spin hidden" viewBox="0 0 24 24" fill="none">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <p class="mt-2 text-[11px] text-muted-foreground text-center sm:text-left px-1" data-i18n="input.tip">
+    不必清理文案，口令里夹着链接也可以直接解析。
+  </p>
+
+  <div id="error-box" class="hidden mt-3 p-3 rounded-lg border border-red-200 bg-red-50 text-red-700 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-300 text-xs flex items-start gap-2">
+    <svg class="w-4 h-4 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/>
+    </svg>
+    <div class="flex-1 min-w-0">
+      <div id="error-title" class="font-medium" data-i18n="input.error_title">解析遇到问题</div>
+      <div id="error-message" class="opacity-80 mt-0.5 break-words"></div>
+    </div>
+  </div>
+</div>

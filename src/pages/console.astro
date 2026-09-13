@@ -1,0 +1,308 @@
+﻿---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="MediaFlow · System Control Console">
+  <div class="min-h-screen bg-background text-foreground flex flex-col">
+    <header class="border-b border-border bg-background/80 backdrop-blur-md px-6 h-14 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <a href="/" class="flex items-center gap-2 group">
+          <div class="w-6 h-6 rounded bg-primary text-primary-foreground flex items-center justify-center font-bold text-xs">M</div>
+          <span class="font-semibold text-sm tracking-tight text-foreground">MediaFlow</span>
+        </a>
+        <span class="text-muted-foreground">/</span>
+        <span class="text-xs font-mono text-muted-foreground">Control Console</span>
+        <span class="chip">Hidden</span>
+      </div>
+      <button id="logout-btn" class="text-xs text-muted-foreground hover:text-foreground transition-colors">
+        退出控制台
+      </button>
+    </header>
+
+    <!-- 鉴权锁屏状态 -->
+    <div id="auth-lock" class="flex-1 flex items-center justify-center p-4">
+      <div class="w-full max-w-sm surface rounded-2xl p-6 shadow-float">
+        <div class="w-8 h-8 rounded-lg bg-accent text-accent-foreground flex items-center justify-center mb-4">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        </div>
+        <h2 class="text-base font-semibold text-foreground">管理密钥验证</h2>
+        <p class="text-xs text-muted-foreground mt-1">控制台已隐匿，需要 ADMIN_SECRET 密钥进行鉴权访问。</p>
+
+        <form id="console-login-form" class="mt-4 space-y-3">
+          <input
+            type="password"
+            id="console-key-input"
+            placeholder="输入管理员密钥..."
+            class="field"
+            required
+          />
+          <div id="login-err" class="text-xs text-danger hidden"></div>
+          <button type="submit" class="btn-primary w-full">
+            解锁终端
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- 核心控制台主体 -->
+    <main id="console-body" class="hidden flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 py-8 space-y-8">
+      <!-- 概览指标 -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div class="p-4 rounded-xl surface">
+          <div class="text-xs font-mono text-muted-foreground">Worker Uptime</div>
+          <div id="stat-uptime" class="text-xl font-semibold text-foreground font-mono mt-1">--</div>
+          <div class="text-[11px] text-muted-foreground mt-1">Cloudflare Edge Container</div>
+        </div>
+
+        <div class="p-4 rounded-xl surface">
+          <div class="text-xs font-mono text-muted-foreground">Active Providers</div>
+          <div id="stat-providers-count" class="text-xl font-semibold text-foreground font-mono mt-1">--</div>
+          <div class="text-[11px] text-emerald-600 dark:text-emerald-400 mt-1">全链路容灾与熔断激活</div>
+        </div>
+
+        <div class="p-4 rounded-xl surface">
+          <div class="text-xs font-mono text-muted-foreground">Cache Ops</div>
+          <div class="mt-1 flex items-center justify-between">
+            <span class="text-sm text-foreground font-mono">Edge Cache</span>
+            <button id="purge-cache-btn" class="btn-secondary">清空短缓存</button>
+          </div>
+          <div id="purge-msg" class="text-[11px] text-muted-foreground mt-1">30s-180s 瞬态防穿透</div>
+        </div>
+      </div>
+
+      <!-- Cookie 凭据与上游配置状态 -->
+      <div class="surface rounded-xl p-5">
+        <h3 class="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+          <span>Secrets & 上游配置状态</span>
+          <span class="text-[10px] text-muted-foreground font-normal">(保存在 Cloudflare Worker Secret)</span>
+        </h3>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-mono">
+          <div class="p-2.5 rounded bg-muted border border-border flex items-center justify-between">
+            <span class="text-muted-foreground">DOUYIN_COOKIE</span>
+            <span id="cookie-douyin" class="chip">--</span>
+          </div>
+          <div class="p-2.5 rounded bg-muted border border-border flex items-center justify-between">
+            <span class="text-muted-foreground">BILIBILI_COOKIE</span>
+            <span id="cookie-bilibili" class="chip">--</span>
+          </div>
+          <div class="p-2.5 rounded bg-muted border border-border flex items-center justify-between">
+            <span class="text-muted-foreground">WEIBO_COOKIE</span>
+            <span id="cookie-weibo" class="chip">--</span>
+          </div>
+          <div class="p-2.5 rounded bg-muted border border-border flex items-center justify-between">
+            <span class="text-muted-foreground">COBALT_UPSTREAM</span>
+            <span id="cobalt-status" class="chip">Configured</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 各 Provider 实时健康与熔断监控列表 -->
+      <div class="surface rounded-xl overflow-hidden">
+        <div class="p-4 border-b border-border flex items-center justify-between">
+          <h3 class="text-sm font-semibold text-foreground">Provider 实时健康度与故障降级监控</h3>
+          <button id="refresh-stats-btn" class="text-xs text-muted-foreground hover:text-foreground">刷新状态</button>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs font-mono">
+            <thead class="bg-muted text-muted-foreground border-b border-border">
+              <tr>
+                <th class="py-3 px-4">Provider ID</th>
+                <th class="py-3 px-4">名称</th>
+                <th class="py-3 px-4">支持平台</th>
+                <th class="py-3 px-4">成功 / 失败</th>
+                <th class="py-3 px-4">当前状态</th>
+              </tr>
+            </thead>
+            <tbody id="providers-table-body" class="divide-y divide-border text-foreground">
+              <!-- 动态填入 -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 在线单 URL 调试回放沙箱 -->
+      <div class="surface rounded-xl p-5 space-y-4">
+        <h3 class="text-sm font-semibold text-foreground">实时解析沙箱探针</h3>
+        <p class="text-xs text-muted-foreground">直接向 API 发送解析请求，输出全链路追踪报文与降级链记录。</p>
+        <div class="flex gap-2">
+          <input
+            type="text"
+            id="debug-url-input"
+            placeholder="输入任意平台公开链接用于探针测试..."
+            class="field flex-1"
+          />
+          <button id="debug-run-btn" class="btn-primary">发送测试</button>
+        </div>
+        <pre id="debug-output" class="hidden p-4 rounded-lg bg-muted border border-border text-[11px] font-mono text-foreground overflow-x-auto max-h-72"></pre>
+      </div>
+    </main>
+  </div>
+</Layout>
+
+<script>
+  let activeToken = sessionStorage.getItem('admin_token') || '';
+
+  const authLock = document.getElementById('auth-lock');
+  const consoleBody = document.getElementById('console-body');
+  const loginForm = document.getElementById('console-login-form');
+  const keyInput = document.getElementById('console-key-input') as HTMLInputElement;
+  const loginErr = document.getElementById('login-err');
+  const logoutBtn = document.getElementById('logout-btn');
+
+  const statUptime = document.getElementById('stat-uptime');
+  const statProvidersCount = document.getElementById('stat-providers-count');
+  const tableBody = document.getElementById('providers-table-body');
+  const refreshStatsBtn = document.getElementById('refresh-stats-btn');
+  const purgeCacheBtn = document.getElementById('purge-cache-btn');
+  const purgeMsg = document.getElementById('purge-msg');
+
+  const cookieDouyin = document.getElementById('cookie-douyin');
+  const cookieBilibili = document.getElementById('cookie-bilibili');
+  const cookieWeibo = document.getElementById('cookie-weibo');
+
+  const debugInput = document.getElementById('debug-url-input') as HTMLInputElement;
+  const debugBtn = document.getElementById('debug-run-btn');
+  const debugOutput = document.getElementById('debug-output');
+
+  if (activeToken) {
+    loadConsoleData(activeToken);
+  }
+
+  loginForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const token = keyInput.value.trim();
+    if (!token) return;
+    const ok = await loadConsoleData(token);
+    if (!ok && loginErr) {
+      loginErr.textContent = '鉴权失败：密钥不正确';
+      loginErr.classList.remove('hidden');
+    }
+  });
+
+  logoutBtn?.addEventListener('click', () => {
+    sessionStorage.removeItem('admin_token');
+    window.location.href = '/';
+  });
+
+  async function loadConsoleData(token: string): Promise<boolean> {
+    try {
+      const res = await fetch('/api/v1/admin/stats', {
+        headers: { Authorization: `Bearer ${token}`, 'X-Admin-Key': token },
+      });
+      if (!res.ok) return false;
+
+      const resp = await res.json();
+      if (!resp.success) return false;
+
+      activeToken = token;
+      sessionStorage.setItem('admin_token', token);
+
+      authLock?.classList.add('hidden');
+      consoleBody?.classList.remove('hidden');
+
+      renderDashboard(resp.data);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  function renderDashboard(data: any) {
+    if (statUptime) statUptime.textContent = `${Math.floor(data.uptime || 0)}s`;
+    if (statProvidersCount) statProvidersCount.textContent = String(data.providers?.length || 0);
+
+    // Cookie 状态
+    updateBadge(cookieDouyin, data.cookiesConfigured?.douyin);
+    updateBadge(cookieBilibili, data.cookiesConfigured?.bilibili);
+    updateBadge(cookieWeibo, data.cookiesConfigured?.weibo);
+
+    // Provider 表格
+    if (tableBody) {
+      tableBody.innerHTML = '';
+      (data.providers || []).forEach((p: any) => {
+        const isCircuitOpen = p.stats?.circuitOpenUntil && p.stats.circuitOpenUntil > Date.now();
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-muted/70 transition-colors';
+        tr.innerHTML = `
+          <td class="py-3 px-4 text-foreground font-semibold">${p.id}</td>
+          <td class="py-3 px-4 text-muted-foreground">${p.name}</td>
+          <td class="py-3 px-4 text-muted-foreground">${p.platforms?.join(', ')}</td>
+          <td class="py-3 px-4 text-muted-foreground">${p.stats?.successes || 0} / ${p.stats?.failures || 0}</td>
+          <td class="py-3 px-4">
+            <span class="px-2 py-0.5 rounded text-[10px] border ${
+              isCircuitOpen
+                ? 'bg-red-50 text-red-700 border-red-200 dark:bg-rose-950 dark:text-rose-300 dark:border-rose-800'
+                : 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300 dark:border-emerald-800'
+            }">
+              ${isCircuitOpen ? '熔断开启' : '健康就绪'}
+            </span>
+          </td>
+        `;
+        tableBody.appendChild(tr);
+      });
+    }
+  }
+
+  function updateBadge(el: HTMLElement | null, ok: boolean | undefined) {
+    if (!el) return;
+    el.textContent = ok ? 'Configured' : 'Empty';
+    el.className = `chip ${
+      ok
+        ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950 dark:text-emerald-300'
+        : ''
+    }`;
+  }
+
+  refreshStatsBtn?.addEventListener('click', () => {
+    if (activeToken) loadConsoleData(activeToken);
+  });
+
+  purgeCacheBtn?.addEventListener('click', async () => {
+    if (!activeToken) return;
+    try {
+      const res = await fetch('/api/v1/admin/cache-purge', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${activeToken}`, 'X-Admin-Key': activeToken },
+      });
+      const data = await res.json();
+      if (purgeMsg) {
+        purgeMsg.textContent = data.message || '缓存已清空';
+        purgeMsg.className = 'text-[11px] text-emerald-400 mt-1';
+        setTimeout(() => {
+          purgeMsg.textContent = '30s-180s 瞬态防穿透';
+          purgeMsg.className = 'text-[11px] text-muted-foreground mt-1';
+        }, 3000);
+      }
+    } catch (err: any) {
+      alert('清空缓存异常');
+    }
+  });
+
+  // 沙箱调试
+  debugBtn?.addEventListener('click', async () => {
+    const raw = debugInput.value.trim();
+    if (!raw) return;
+
+    if (debugOutput) {
+      debugOutput.classList.remove('hidden');
+      debugOutput.textContent = '正在发起探测解析...';
+    }
+
+    try {
+      const res = await fetch('/api/v1/parse', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: raw }),
+      });
+      const json = await res.json();
+      if (debugOutput) {
+        debugOutput.textContent = JSON.stringify(json, null, 2);
+      }
+    } catch (err: any) {
+      if (debugOutput) {
+        debugOutput.textContent = '错误: ' + (err?.message || err);
+      }
+    }
+  });
+</script>
