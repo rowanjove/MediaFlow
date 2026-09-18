@@ -225,5 +225,5 @@ npx wrangler deploy
 
 ## 开源协议
 
-本项目采用 [MIT License](./LICENSE) 协议开源。
+本项目采用 [Apache-2.0 License](./LICENSE) 协议开源。
 涉及到的第三方协议与设计参考详见 [THIRD_PARTY_NOTICES.md](./THIRD_PARTY_NOTICES.md)。
