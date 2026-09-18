@@ -225,5 +225,5 @@ The admin entrance is deliberately hidden from the public interface:
 
 ## License
 
-This project is licensed under the [MIT License](./LICENSE).
+This project is licensed under the [Apache-2.0 License](./LICENSE).
 Third-party notices and design references are documented in [THIRD_PARTY_NOTICES.md](./THIRD_PARTY_NOTICES.md).
